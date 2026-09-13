@@ -638,8 +638,15 @@ let currentProject = null;
 let investType = null;
 
 let currentUser = JSON.parse(localStorage.getItem('nekeUser')) || {
-    donations: [],
-    investments: []
+    donations: [
+        { projectId: 6, projectTitle: "Heladería Artesanal Bajo Cero", amount: 100, date: "10/08/2026" },
+        { projectId: 7, projectTitle: "Velas Artesanales de Soya - Velarosa Studio", amount: 50, date: "18/08/2026" }
+    ],
+    investments: [
+        { projectId: 5, projectTitle: "Vasos y Copas de Botellas Recicladas", amount: 10000, date: "22/08/2026" },
+        { projectId: 8, projectTitle: "Snacks Saludables - Innovación desde Villavicencio", amount: 1000, date: "01/09/2026" },
+        { projectId: 9, projectTitle: "Marca de Ropa Deportiva - De Cero a Mi Propia Marca", amount: 5000, date: "08/09/2026" }
+    ]
 };
 
 function recordTransaction(type, project, amount) {
