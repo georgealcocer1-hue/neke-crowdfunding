@@ -420,6 +420,40 @@
             color: white;
             border-color: #4F46E5;
         }
+        .share-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        .share-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 8px;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            color: #333;
+            transition: all 0.2s;
+        }
+        .share-option:hover {
+            background: #F1F5F9;
+            transform: translateY(-2px);
+        }
+        .share-option .share-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: white;
+        }
         .empty-state {
             text-align: center;
             color: #94A3B8;
@@ -532,6 +566,15 @@
     <div id="investContent"></div>
 </div>
 
+<!-- SHARE SHEET -->
+<div class="sheet-modal" id="shareSheet">
+    <div class="sheet-header">
+        <div style="font-weight: bold; font-size: 16px;">Compartir proyecto</div>
+        <button onclick="closeShare()" style="background: none; border: none; font-size: 16px; cursor: pointer;">✕</button>
+    </div>
+    <div class="share-options" id="shareOptions"></div>
+</div>
+
 <!-- ADMIN MODAL -->
 <div class="modal" id="adminModal">
     <div class="modal-content">
@@ -557,9 +600,9 @@
             </div>
             
             <div class="form-group">
-                <label>URL Video YouTube (mostrando producto) *</label>
-                <input type="text" id="ytUrl" required onchange="testYT()" onkeyup="testYT()">
-                <small style="color: #666; font-size: 11px; display: block; margin-top: 4px;">Pega URL completa o ID de YouTube</small>
+                <label>URL Video YouTube o TikTok (mostrando producto) *</label>
+                <input type="text" id="ytUrl" required onchange="testVideoUrl()" onkeyup="testVideoUrl()">
+                <small style="color: #666; font-size: 11px; display: block; margin-top: 4px;">Pega la URL completa del video (YouTube o TikTok)</small>
                 <div id="ytStatus" class="info-box" style="display: none; margin-top: 8px;"></div>
             </div>
             
@@ -741,35 +784,70 @@ function extractYTId(url) {
     return '';
 }
 
-function testYT() {
+function extractTikTokId(url) {
+    if (!url) return '';
+    url = url.trim();
+
+    const m = url.match(/tiktok\.com\/@[^/]+\/video\/(\d+)/);
+    if (m) return m[1];
+
+    if (/^\d{15,20}$/.test(url)) return url;
+
+    return '';
+}
+
+function extractVideoInfo(url) {
+    if (!url) return { platform: null, id: '' };
+    url = url.trim();
+
+    if (url.includes('tiktok.com')) {
+        return { platform: 'tiktok', id: extractTikTokId(url) };
+    }
+
+    if (/^\d{15,20}$/.test(url)) {
+        return { platform: 'tiktok', id: url };
+    }
+
+    return { platform: 'youtube', id: extractYTId(url) };
+}
+
+function getPlatform(p) {
+    return p.platform || 'youtube';
+}
+
+function getVideoId(p) {
+    return p.videoId || p.ytId || '';
+}
+
+function testVideoUrl() {
     const url = document.getElementById('ytUrl').value;
-    const id = extractYTId(url);
+    const { platform, id } = extractVideoInfo(url);
     const status = document.getElementById('ytStatus');
     const submitBtn = document.getElementById('submitBtn');
-    
+
     if (!url) {
         status.style.display = 'none';
         submitBtn.disabled = false;
         return;
     }
-    
-    if (!id || !/^[a-zA-Z0-9_-]{11}$/.test(id)) {
+
+    if (!id) {
         status.style.display = 'block';
-        status.classList.add('error');
-        status.textContent = '❌ ID inválido. Pega una URL válida de YouTube.';
+        status.textContent = platform === 'tiktok'
+            ? '❌ No se pudo leer el ID. Usa el link completo de TikTok (tiktok.com/@usuario/video/...), los links cortos vm.tiktok.com no funcionan.'
+            : '❌ ID inválido. Pega una URL válida de YouTube.';
         status.style.background = '#FEE2E2';
         status.style.borderColor = '#DC2626';
         status.style.color = '#7F1D1D';
         submitBtn.disabled = true;
         return;
     }
-    
+
     status.style.display = 'block';
-    status.classList.remove('error');
     status.style.background = '#D1FAE5';
     status.style.borderColor = '#059669';
     status.style.color = '#065F46';
-    status.textContent = '✅ ID válido: ' + id;
+    status.textContent = (platform === 'tiktok' ? '✅ TikTok válido: ' : '✅ YouTube válido: ') + id;
     submitBtn.disabled = false;
 }
 
@@ -802,16 +880,17 @@ function render() {
         return;
     }
 
-    const html = filteredProjects.map((p, idx) => `
-        <div class="card" data-project-id="${p.id}">
+    const html = filteredProjects.map((p, idx) => {
+        const platform = getPlatform(p);
+        const vid = getVideoId(p);
+        const videoEmbed = platform === 'tiktok'
+            ? `<iframe id="yt-player-${p.id}" src="https://www.tiktok.com/embed/v2/${vid}" allow="autoplay; encrypted-media; fullscreen" allowfullscreen loading="lazy"></iframe>`
+            : `<iframe id="yt-player-${p.id}" src="https://www.youtube.com/embed/${vid}?rel=0&mute=1&loop=1&playlist=${vid}&enablejsapi=1&playsinline=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>`;
+
+        return `
+        <div class="card" data-project-id="${p.id}" data-platform="${platform}">
             <div class="video-container">
-                <iframe
-                    id="yt-player-${p.id}"
-                    src="https://www.youtube.com/embed/${p.ytId}?rel=0&mute=1&loop=1&playlist=${p.ytId}&enablejsapi=1&playsinline=1"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowfullscreen
-                    loading="lazy">
-                </iframe>
+                ${videoEmbed}
             </div>
             <div class="info">
                 <div class="title">
@@ -839,8 +918,9 @@ function render() {
                 <button class="control-btn" onclick="shareProject(${p.id})" title="Compartir">↗</button>
             </div>
         </div>
-    `).join('');
-    
+        `;
+    }).join('');
+
     document.getElementById('feed').innerHTML = html;
     setupFeedObserver();
 }
@@ -858,6 +938,7 @@ function setupFeedObserver() {
     const cards = document.querySelectorAll('.card');
     feedObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
+            if (entry.target.dataset.platform !== 'youtube') return;
             const iframe = entry.target.querySelector('iframe');
             ytCommand(iframe, entry.isIntersecting ? 'playVideo' : 'pauseVideo');
         });
@@ -1086,9 +1167,48 @@ function confirmInvestment() {
 
 function shareProject(id) {
     const p = projects.find(x => x.id === id);
-    const link = window.location.href + '?project=' + id;
+    currentProject = p;
+    document.getElementById('shareOptions').innerHTML = renderShareOptions(p);
+    document.getElementById('shareSheet').classList.add('active');
+}
+
+function closeShare() {
+    document.getElementById('shareSheet').classList.remove('active');
+}
+
+function renderShareOptions(p) {
+    const link = window.location.origin + window.location.pathname + '?project=' + p.id;
+    const text = `Apoya "${p.title}" en ÑEKE 🚀`;
+    const encodedLink = encodeURIComponent(link);
+    const encodedText = encodeURIComponent(text);
+
+    const networks = [
+        { name: 'WhatsApp', color: '#25D366', icon: '💬', url: `https://api.whatsapp.com/send?text=${encodedText}%20${encodedLink}` },
+        { name: 'Facebook', color: '#1877F2', icon: 'f', url: `https://www.facebook.com/sharer/sharer.php?u=${encodedLink}` },
+        { name: 'X', color: '#000000', icon: '𝕏', url: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedLink}` },
+        { name: 'Telegram', color: '#26A5E4', icon: '✈️', url: `https://t.me/share/url?url=${encodedLink}&text=${encodedText}` },
+        { name: 'Email', color: '#6B7280', icon: '✉️', url: `mailto:?subject=${encodeURIComponent(p.title)}&body=${encodedText}%20${encodedLink}` }
+    ];
+
+    const networkButtons = networks.map(n => `
+        <button type="button" class="share-option" onclick="window.open('${n.url}', '_blank')">
+            <span class="share-icon" style="background: ${n.color};">${n.icon}</span>
+            ${n.name}
+        </button>
+    `).join('');
+
+    return networkButtons + `
+        <button type="button" class="share-option" onclick="copyShareLink('${link}')">
+            <span class="share-icon" style="background: #9CA3AF;">🔗</span>
+            Copiar link
+        </button>
+    `;
+}
+
+function copyShareLink(link) {
     navigator.clipboard.writeText(link);
-    showToast(`🔗 Link de ${p.title} copiado`);
+    showToast('🔗 Link copiado');
+    closeShare();
 }
 
 function openAdmin() {
@@ -1220,19 +1340,20 @@ function addProject(e) {
     e.preventDefault();
     
     const url = document.getElementById('ytUrl').value;
-    const id = extractYTId(url);
-    
+    const { platform, id } = extractVideoInfo(url);
+
     if (!id) {
-        showToast('❌ URL de YouTube inválida');
+        showToast('❌ URL de video inválida (usa un link completo de YouTube o TikTok)');
         return;
     }
-    
+
     projects.push({
         id: Date.now(),
         title: document.getElementById('title').value,
         creator: document.getElementById('creator').value,
         category: document.getElementById('category').value,
-        ytId: id,
+        platform: platform,
+        videoId: id,
         goal: parseInt(document.getElementById('goal').value),
         raised: parseInt(document.getElementById('raised').value),
         days: parseInt(document.getElementById('days').value),
