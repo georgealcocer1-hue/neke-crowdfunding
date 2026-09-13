@@ -937,9 +937,10 @@ function render() {
     const html = filteredProjects.map((p, idx) => {
         const platform = getPlatform(p);
         const vid = getVideoId(p);
+        const loadAttr = idx === 0 ? 'eager' : 'lazy';
         const videoEmbed = platform === 'tiktok'
-            ? `<iframe id="yt-player-${p.id}" src="https://www.tiktok.com/embed/v2/${vid}" allow="autoplay; encrypted-media; fullscreen" allowfullscreen loading="lazy"></iframe>`
-            : `<iframe id="yt-player-${p.id}" src="https://www.youtube.com/embed/${vid}?rel=0&mute=1&loop=1&playlist=${vid}&enablejsapi=1&playsinline=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>`;
+            ? `<iframe id="yt-player-${p.id}" src="https://www.tiktok.com/embed/v2/${vid}" allow="autoplay; encrypted-media; fullscreen" allowfullscreen loading="${loadAttr}"></iframe>`
+            : `<iframe id="yt-player-${p.id}" src="https://www.youtube.com/embed/${vid}?rel=0&mute=1&loop=1&autoplay=1&playlist=${vid}&enablejsapi=1&playsinline=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="${loadAttr}"></iframe>`;
 
         return `
         <div class="card" data-project-id="${p.id}" data-platform="${platform}">
