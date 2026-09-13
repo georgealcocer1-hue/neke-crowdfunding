@@ -374,6 +374,65 @@
             color: white;
             border-color: #4F46E5;
         }
+        .empty-state {
+            text-align: center;
+            color: #94A3B8;
+            font-size: 13px;
+            padding: 24px 12px;
+        }
+        .breakdown-row {
+            margin-bottom: 12px;
+        }
+        .breakdown-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+        .breakdown-label .dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .breakdown-track {
+            height: 10px;
+            background: #F1F5F9;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .breakdown-fill {
+            height: 100%;
+            border-radius: 5px;
+        }
+        .tx-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .tx-table th {
+            text-align: left;
+            color: #94A3B8;
+            text-transform: uppercase;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 6px 8px;
+            border-bottom: 1px solid #E2E8F0;
+        }
+        .tx-table td {
+            padding: 8px;
+            border-bottom: 1px solid #F1F5F9;
+        }
+        .tx-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -382,7 +441,7 @@
     <div class="logo">ÑEKE</div>
     <div class="top-buttons">
         <button onclick="openAdmin()">⚙️ Admin</button>
-        <button onclick="alert('👤 Profile')">👤</button>
+        <button onclick="openProfile()">👤</button>
     </div>
 </div>
 
@@ -494,6 +553,17 @@
     </div>
 </div>
 
+<!-- PROFILE MODAL -->
+<div class="modal" id="profileModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">👤 Mi Perfil</div>
+            <button class="close-btn" onclick="closeProfile()">✕</button>
+        </div>
+        <div id="profileContent"></div>
+    </div>
+</div>
+
 <script>
 // PROYECTOS DEFAULT CON VIDEOS
 let projects = JSON.parse(localStorage.getItem('nekeProjects')) || [
@@ -566,6 +636,26 @@ let projects = JSON.parse(localStorage.getItem('nekeProjects')) || [
 
 let currentProject = null;
 let investType = null;
+
+let currentUser = JSON.parse(localStorage.getItem('nekeUser')) || {
+    donations: [],
+    investments: []
+};
+
+function recordTransaction(type, project, amount) {
+    const record = {
+        projectId: project.id,
+        projectTitle: project.title,
+        amount: amount,
+        date: new Date().toLocaleDateString('es-EC')
+    };
+    if (type === 'donate') {
+        currentUser.donations.push(record);
+    } else {
+        currentUser.investments.push(record);
+    }
+    localStorage.setItem('nekeUser', JSON.stringify(currentUser));
+}
 
 function extractYTId(url) {
     if (!url) return '';
@@ -842,6 +932,8 @@ function confirmInvestmentFromModal() {
         return;
     }
 
+    recordTransaction(investType, currentProject, amount);
+
     if (investType === 'donate') {
         showToast(`✅ ¡Donaste $${amount} a ${currentProject.title}!`);
     } else {
@@ -869,6 +961,8 @@ function confirmInvestment() {
         return;
     }
 
+    recordTransaction(investType, currentProject, amount);
+
     if (investType === 'donate') {
         showToast(`✅ ¡Donaste $${amount} a ${currentProject.title}!`);
     } else {
@@ -892,6 +986,112 @@ function openAdmin() {
 
 function closeAdmin() {
     document.getElementById('adminModal').classList.remove('active');
+}
+
+function openProfile() {
+    renderProfile();
+    document.getElementById('profileModal').classList.add('active');
+}
+
+function closeProfile() {
+    document.getElementById('profileModal').classList.remove('active');
+}
+
+function renderProfile() {
+    const donations = currentUser.donations;
+    const investments = currentUser.investments;
+
+    const totalDonado = donations.reduce((sum, d) => sum + d.amount, 0);
+    const totalInvertido = investments.reduce((sum, i) => sum + i.amount, 0);
+    const totalTx = donations.length + investments.length;
+    const proyectosApoyados = new Set(
+        [...donations, ...investments].map(t => t.projectId)
+    ).size;
+
+    const statsHtml = `
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-card-value">$${totalDonado.toLocaleString()}</div>
+                <div class="stat-card-label">💝 Total Donado</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value">$${totalInvertido.toLocaleString()}</div>
+                <div class="stat-card-label">💰 Total Invertido</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value">${totalTx}</div>
+                <div class="stat-card-label">📊 Transacciones</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value">${proyectosApoyados}</div>
+                <div class="stat-card-label">🚀 Proyectos Apoyados</div>
+            </div>
+        </div>
+    `;
+
+    if (totalTx === 0) {
+        document.getElementById('profileContent').innerHTML = statsHtml + `
+            <div class="empty-state">Aún no has donado ni invertido en ningún proyecto.<br>Explora el feed y apoya un emprendimiento 🚀</div>
+        `;
+        return;
+    }
+
+    const total = totalDonado + totalInvertido;
+    const pctDonado = total ? Math.round(totalDonado / total * 100) : 0;
+    const pctInvertido = total ? 100 - pctDonado : 0;
+
+    const breakdownHtml = `
+        <h3 style="margin-bottom: 12px; font-size: 14px;">Distribución por tipo</h3>
+        <div class="breakdown-row">
+            <div class="breakdown-label">
+                <span><span class="dot" style="background: #10B981;"></span>Donaciones</span>
+                <span>$${totalDonado.toLocaleString()} (${pctDonado}%)</span>
+            </div>
+            <div class="breakdown-track">
+                <div class="breakdown-fill" style="width: ${pctDonado}%; background: #10B981;"></div>
+            </div>
+        </div>
+        <div class="breakdown-row">
+            <div class="breakdown-label">
+                <span><span class="dot" style="background: #4F46E5;"></span>Inversiones</span>
+                <span>$${totalInvertido.toLocaleString()} (${pctInvertido}%)</span>
+            </div>
+            <div class="breakdown-track">
+                <div class="breakdown-fill" style="width: ${pctInvertido}%; background: #4F46E5;"></div>
+            </div>
+        </div>
+    `;
+
+    const allTx = [
+        ...donations.map(d => ({ ...d, type: 'donate' })),
+        ...investments.map(i => ({ ...i, type: 'invest' }))
+    ].reverse();
+
+    const tableHtml = `
+        <h3 style="margin: 20px 0 12px; font-size: 14px;">Historial de transacciones</h3>
+        <table class="tx-table">
+            <thead>
+                <tr>
+                    <th>Proyecto</th>
+                    <th>Tipo</th>
+                    <th>Monto</th>
+                    <th>Fecha</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${allTx.map(t => `
+                    <tr>
+                        <td>${t.projectTitle}</td>
+                        <td><span class="tx-badge" style="background: ${t.type === 'donate' ? '#10B981' : '#4F46E5'};">${t.type === 'donate' ? 'DONACIÓN' : 'INVERSIÓN'}</span></td>
+                        <td>$${t.amount.toLocaleString()}</td>
+                        <td>${t.date}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+
+    document.getElementById('profileContent').innerHTML = statsHtml + breakdownHtml + tableHtml;
 }
 
 function showList() {
