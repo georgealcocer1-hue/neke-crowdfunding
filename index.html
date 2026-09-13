@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>ÑEKE - Crowdfunding Ecuador</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #4338CA;
+            --accent: #FF5722;
+            --accent-light: #FF7043;
+            --bg-light: #F8FAFC;
+            --bg-white: #FFFFFF;
+            --bg-gray: #F1F5F9;
+            --text-dark: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #94A3B8;
+            --border: #E2E8F0;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-bar {
+            height: 60px;
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 100;
+            position: relative;
+        }
+
+        .logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .top-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-dark);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-gray);
+        }
+
+        .btn-profile {
+            background: transparent;
+            color: var(--text-dark);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .content {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+        }
+
+        /* MAIN VIEW */
+        .main-view {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .categories-filter {
+            padding: 12px 20px;
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+        }
+
+        .category-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        .category-btn:hover,
+        .category-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .feed-area {
+            flex: 1;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+
+        .campaign-card {
+            width: 100%;
+            height: calc(100vh - 120px);
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            position: relative;
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .campaign-video {
+            width: 100%;
+            height: 100%;
+            background: #000;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .campaign-video iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .video-error {
+            color: white;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .video-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 250px;
+            background: linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0) 100%);
+            pointer-events: none;
+        }
+
+        .campaign-info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 80px;
+            color: white;
+            z-index: 10;
+        }
+
+        .campaign-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 12px;
+        }
+
+        .campaign-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .return-type-badge {
+            background: var(--accent);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .return-type-badge.product {
+            background: #8B5CF6;
+        }
+
+        .return-type-badge.equity {
+            background: #06B6D4;
+        }
+
+        .return-type-badge.donation {
+            background: #10B981;
+        }
+
+        .campaign-creator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .creator-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        .campaign-stats {
+            display: flex;
+            gap: 24px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            color: var(--accent);
+            font-size: 16px;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 11px;
+            margin-top: 2px;
+        }
+
+        .controls {
+            position: absolute;
+            right: 16px;
+            bottom: 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 15;
+        }
+
+        .control-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .control-btn.active {
+            background: var(--accent);
+        }
+
+        /* MODAL */
+        .modal-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-white);
+            border-top: 1px solid var(--border);
+            border-radius: 20px 20px 0 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s;
+            z-index: 60;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-panel.active {
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .panel-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .close-panel {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        .progress-section {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-gray);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+        }
+
+        .meta-info {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .meta-item {
+            background: var(--bg-gray);
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .meta-label {
+            color: var(--text-muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .meta-value {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .project-details {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .details-title {
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .details-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .action-buttons {
+            padding: 20px;
+            display: flex;
+            gap: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .btn-full {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-invest {
+            background: var(--primary);
+            color: white;
+        }
+
+        .share-section {
+            padding: 20px;
+            background: var(--bg-gray);
+            margin: 20px;
+            border-radius: 8px;
+        }
+
+        .share-link-box {
+            display: flex;
+            gap: 8px;
+        }
+
+        .share-link-input {
+            flex: 1;
+            background: white;
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .btn-copy {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* PROFILE SIDE */
+        .profile-side {
+            width: 380px;
+            background: var(--bg-white);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 40;
+            transform: translateX(380px);
+            transition: transform 0.3s;
+            position: absolute;
+            right: 0;
+            top: 0;
+            height: 100%;
+        }
+
+        .profile-side.active {
+            transform: translateX(0);
+        }
+
+        .profile-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+        }
+
+        .profile-avatar-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .profile-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .profile-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .profile-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .profile-email {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .profile-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-card-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-card-label {
+            font-size: 11px;
+            opacity: 0.9;
+        }
+
+        .section {
+            padding: 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-title {
+            padding: 16px 20px 8px;
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .transaction-item {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        .transaction-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .transaction-title {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .transaction-amount {
+            font-weight: 700;
+            color: var(--success);
+        }
+
+        .transaction-amount.negative {
+            color: var(--primary);
+        }
+
+        .transaction-date {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--success);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 12px;
+            z-index: 300;
+        }
+
+        @media (max-width: 768px) {
+            .profile-side {
+                width: 100%;
+                transform: translateY(100%);
+                bottom: 0;
+                top: auto;
+                height: 60vh;
+                border-left: none;
+                border-top: 1px solid var(--border);
+                border-radius: 20px 20px 0 0;
+            }
+
+            .profile-side.active {
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="top-bar">
+    <a onclick="goHome()" class="logo" style="cursor: pointer;">ÑEKE</a>
+    <div class="top-actions">
+        <button class="btn btn-admin" onclick="openAdminPanel()">⚙️ Admin</button>
+        <button class="btn-profile" onclick="toggleProfile()">👤</button>
+    </div>
+</div>
+
+<div class="content">
+    <div class="main-view">
+        <div class="categories-filter">
+            <button class="category-btn active" onclick="filterCategory('all')">Todos</button>
+            <button class="category-btn" onclick="filterCategory('fintech')">FinTech</button>
+            <button class="category-btn" onclick="filterCategory('ecommerce')">E-commerce</button>
+            <button class="category-btn" onclick="filterCategory('agritech')">AgriTech</button>
+            <button class="category-btn" onclick="filterCategory('healthtech')">HealthTech</button>
+        </div>
+
+        <div class="feed-area" id="feedArea"></div>
+
+        <div class="modal-panel" id="modalPanel">
+            <div class="panel-header">
+                <div class="panel-title">Detalles</div>
+                <button class="close-panel" onclick="toggleModal()">✕</button>
+            </div>
+            <div class="panel-content" id="panelContent"></div>
+        </div>
+    </div>
+
+    <div class="profile-side" id="profileSide">
+        <div class="profile-header">
+            <div class="profile-avatar-section">
+                <div>
+                    <div class="profile-avatar" id="profileAvatarMain">GU</div>
+                    <div class="profile-name">George Urbano</div>
+                    <div class="profile-email">george@neke.ec</div>
+                </div>
+                <button class="profile-close" onclick="toggleProfile()">✕</button>
+            </div>
+        </div>
+
+        <div class="profile-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card-value" id="totalDonations">$0</div>
+                    <div class="stat-card-label">Donado</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value" id="totalInvested">$0</div>
+                    <div class="stat-card-label">Invertido</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value" id="investmentReturn">0%</div>
+                    <div class="stat-card-label">ROI</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value" id="activeInvestments">0</div>
+                    <div class="stat-card-label">Activas</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">📊 Mis Inversiones</div>
+                <div id="investmentsList"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">💝 Mis Donaciones</div>
+                <div id="donationsList"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">⭐ Guardados</div>
+                <div id="savedList"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ADMIN MODAL -->
+<div class="admin-modal" id="adminModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; padding: 20px; overflow-y: auto;">
+    <div style="background: white; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <div style="font-family: 'Outfit'; font-size: 24px; font-weight: 700;">Administrador ÑEKE</div>
+            <button style="background: none; border: none; font-size: 28px; cursor: pointer; color: var(--text-secondary);" onclick="closeAdminPanel()">✕</button>
+        </div>
+
+        <div>
+            <h3 style="margin-bottom: 16px; font-size: 16px;">Proyectos Actuales</h3>
+            <div id="projectsList" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin: 20px 0;"></div>
+
+            <h3 style="margin: 24px 0 16px 0; font-size: 16px;">Nuevo Proyecto</h3>
+            
+            <form id="projectForm" onsubmit="saveProject(event)">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: var(--text-dark);">Título del Proyecto *</label>
+                    <input type="text" id="projectTitle" required style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: 'Inter';">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                    <div>
+                        <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px;">Emprendedor *</label>
+                        <input type="text" id="projectCreator" required style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: 'Inter';">
+                    </div>
+                    <div>
+                        <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px;">Categoría *</label>
+                        <select id="projectCategory" required style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: 'Inter';">
+                            <option value="">Selecciona</option>
+                            <option value="fintech">FinTech</option>
+                            <option value="ecommerce">E-commerce</option>
+                            <option value="agritech">AgriTech</option>
+                            <option value="healthtech">HealthTech</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px;">URL Video YouTube *</label>
+                    <input type="text" id="projectUrl" placeholder="https://www.youtube.com/watch?v=..." required onchange="validateYouTubeUrl()" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: 'Inter';">
+                    <small style="color: var(--text-muted); display: block; margin-top: 4px;">Pega la URL completa del video</small>
+                    <div id="youtubePreview" style="margin-top: 12px; padding: 12px; background: #E0F2FE; border-radius: 6px; display: none;">
+                        <small style="color: #0369A1;"><strong>ID:</strong> <code id="extractedId" style="background: white; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 11px;"></code></small>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                    <div>
+                        <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px;">Meta ($) *</label>
+                        <input type="number" id="projectGoal" placeholder="50000" required style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: 'Inter';">
+                    </div>
+                    <div>
+                        <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px;">Recaudado ($) *</label>
+                        <input type="number" id="projectRaised" placeholder="36000" required style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: 'Inter';">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                    <div>
+                        <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px;">Días Restantes *</label>
+                        <input type="number" id="projectDays" placeholder="15" required style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: 'Inter';">
+                    </div>
+                    <div>
+                        <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px;">Tipo Retorno *</label>
+                        <select id="projectReturnType" required style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: 'Inter';">
+                            <option value="">Selecciona</option>
+                            <option value="donation">Donación</option>
+                            <option value="product">Producto</option>
+                            <option value="equity">Equity</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px;">Descripción *</label>
+                    <textarea id="projectDescription" required style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: 'Inter'; min-height: 80px;"></textarea>
+                </div>
+
+                <button type="submit" style="width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-family: 'Inter';">✅ Guardar Proyecto</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+const defaultCampaigns = [
+    {
+        id: 1,
+        title: "Plataforma de Delivery Inteligente",
+        creator: "Carlos Mendoza",
+        category: "ecommerce",
+        progress: 72,
+        raised: 36000,
+        goal: 50000,
+        deadline: "15 días",
+        youtubeId: "dQw4w9WgXcQ",
+        returnType: "equity",
+        returnLabel: "EQUITY",
+        description: "Revolucionamos la entrega de comida con IA que optimiza rutas.",
+        tags: ["Móvil", "IA", "Delivery"],
+        likes: 1240,
+        liked: false,
+        team: [{ name: "Carlos Mendoza", role: "CEO / Fundador" }]
+    }
+];
+
+let campaigns = [];
+let filteredCampaigns = [];
+let currentCampaign = null;
+let currentUser = {
+    name: "George Urbano",
+    email: "george@neke.ec",
+    avatar: "GU",
+    donations: [],
+    investments: [],
+    saved: []
+};
+
+function extractYouTubeId(url) {
+    if (!url) return '';
+    url = url.trim();
+    
+    if (url.length === 11 && !url.includes('/')) return url;
+    if (url.includes('youtube.com')) {
+        const match = url.match(/[?&]v=([^&]+)/);
+        if (match) return match[1];
+    }
+    if (url.includes('youtu.be/')) {
+        const match = url.match(/youtu\.be\/([^?&]+)/);
+        if (match) return match[1];
+    }
+    if (url.includes('/embed/')) {
+        const match = url.match(/\/embed\/([^?&]+)/);
+        if (match) return match[1];
+    }
+    return url;
+}
+
+function validateYouTubeUrl() {
+    const url = document.getElementById('projectUrl').value;
+    const id = extractYouTubeId(url);
+    document.getElementById('extractedId').textContent = id;
+    document.getElementById('youtubePreview').style.display = id ? 'block' : 'none';
+}
+
+function loadData() {
+    const stored = localStorage.getItem('nekeCampaigns');
+    campaigns = stored ? JSON.parse(stored) : JSON.parse(JSON.stringify(defaultCampaigns));
+    filteredCampaigns = [...campaigns];
+
+    const storedUser = localStorage.getItem('nekeUser');
+    if (storedUser) {
+        currentUser = JSON.parse(storedUser);
+    }
+
+    renderCampaigns();
+}
+
+function renderCampaigns() {
+    const feedArea = document.getElementById('feedArea');
+    feedArea.innerHTML = filteredCampaigns.map((c, idx) => `
+        <div class="campaign-card" data-index="${idx}">
+            <div class="campaign-video">
+                <iframe src="https://www.youtube.com/embed/${c.youtubeId}?autoplay=1&mute=1&loop=1" allow="autoplay"></iframe>
+            </div>
+            <div class="video-overlay"></div>
+            <div class="campaign-info">
+                <div class="campaign-header">
+                    <div>
+                        <div class="campaign-title">${c.title}</div>
+                    </div>
+                    <span class="return-type-badge ${c.returnType}">${c.returnLabel}</span>
+                </div>
+                <div class="campaign-creator">
+                    <div class="creator-avatar">${c.creator.substring(0,2)}</div>
+                    <div>${c.creator}</div>
+                </div>
+                <div class="campaign-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">$${(c.raised/1000).toFixed(0)}K</div>
+                        <div class="stat-label">Recaudado</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${c.progress}%</div>
+                        <div class="stat-label">Meta</div>
+                    </div>
+                </div>
+            </div>
+            <div class="controls">
+                <button class="control-btn" onclick="investProject(${c.id})" title="Invertir">💰</button>
+                <button class="control-btn" onclick="toggleSaveProject(${c.id})" title="Guardar">💾</button>
+                <button class="control-btn" onclick="shareProject(${c.id})" title="Compartir">↗</button>
+            </div>
+        </div>
+    `).join('');
+
+    setupObserver();
+}
+
+function setupObserver() {
+    const cards = document.querySelectorAll('.campaign-card');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const idx = parseInt(entry.target.dataset.index);
+                currentCampaign = filteredCampaigns[idx];
+                renderDetails(currentCampaign);
+            }
+        });
+    }, { threshold: 0.5 });
+
+    cards.forEach(c => observer.observe(c));
+}
+
+function renderDetails(c) {
+    const content = document.getElementById('panelContent');
+    content.innerHTML = `
+        <div class="progress-section">
+            <div class="progress-label">
+                <span>Meta alcanzada</span>
+                <span>$${c.raised.toLocaleString()} / $${c.goal.toLocaleString()}</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: ${c.progress}%"></div>
+            </div>
+        </div>
+
+        <div class="meta-info">
+            <div class="meta-item">
+                <div class="meta-label">Inversores</div>
+                <div class="meta-value">${Math.floor(c.raised / 500)}</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">Días</div>
+                <div class="meta-value">${c.deadline.split(' ')[0]}</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">Categoría</div>
+                <div class="meta-value">${c.category.toUpperCase()}</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">Retorno</div>
+                <div class="meta-value">${c.returnLabel}</div>
+            </div>
+        </div>
+
+        <div class="project-details">
+            <div class="details-title">Sobre el Proyecto</div>
+            <div class="details-text">${c.description}</div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn-full btn-invest" onclick="investProject(${c.id})">💰 Invertir</button>
+        </div>
+
+        <div class="share-section">
+            <div class="share-link-box">
+                <div class="share-link-input">${window.location.origin}?project=${c.id}</div>
+                <button class="btn-copy" onclick="copyLink()">Copiar</button>
+            </div>
+        </div>
+    `;
+}
+
+function investProject(id) {
+    const amount = prompt('¿Cuánto quieres invertir?');
+    if (amount) {
+        const c = campaigns.find(p => p.id === id);
+        currentUser.investments.push({
+            projectId: id,
+            projectName: c.title,
+            amount: parseInt(amount),
+            date: new Date().toLocaleDateString(),
+            status: 'Activa'
+        });
+        saveCampaigns();
+        updateProfile();
+        showToast('✅ Inversión registrada');
+    }
+}
+
+function toggleSaveProject(id) {
+    const c = campaigns.find(p => p.id === id);
+    if (!currentUser.saved.find(s => s.id === id)) {
+        currentUser.saved.push({ id, title: c.title, date: new Date().toLocaleDateString() });
+        saveCampaigns();
+        showToast('⭐ Proyecto guardado');
+    }
+}
+
+function shareProject(id) {
+    const link = `${window.location.origin}?project=${id}`;
+    navigator.clipboard.writeText(link);
+    showToast('🔗 Link copiado');
+}
+
+function filterCategory(cat) {
+    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    filteredCampaigns = cat === 'all' ? [...campaigns] : campaigns.filter(c => c.category === cat);
+    renderCampaigns();
+}
+
+function toggleModal() {
+    document.getElementById('modalPanel').classList.toggle('active');
+}
+
+function toggleProfile() {
+    document.getElementById('profileSide').classList.toggle('active');
+}
+
+function updateProfile() {
+    const totalDonations = currentUser.donations.reduce((sum, d) => sum + d.amount, 0);
+    const totalInvested = currentUser.investments.reduce((sum, i) => sum + i.amount, 0);
+    
+    document.getElementById('totalDonations').textContent = `$${totalDonations.toLocaleString()}`;
+    document.getElementById('totalInvested').textContent = `$${totalInvested.toLocaleString()}`;
+    document.getElementById('activeInvestments').textContent = currentUser.investments.filter(i => i.status === 'Activa').length;
+
+    document.getElementById('investmentsList').innerHTML = currentUser.investments.map(i => `
+        <div class="transaction-item">
+            <div class="transaction-header">
+                <div class="transaction-title">${i.projectName}</div>
+                <div class="transaction-amount negative">-$${i.amount}</div>
+            </div>
+            <div class="transaction-date">${i.date} • ${i.status}</div>
+        </div>
+    `).join('');
+
+    document.getElementById('donationsList').innerHTML = currentUser.donations.map(d => `
+        <div class="transaction-item">
+            <div class="transaction-header">
+                <div class="transaction-title">${d.projectName}</div>
+                <div class="transaction-amount negative">-$${d.amount}</div>
+            </div>
+            <div class="transaction-date">${d.date}</div>
+        </div>
+    `).join('') || '<div class="transaction-item" style="color: var(--text-muted);">Sin donaciones aún</div>';
+
+    document.getElementById('savedList').innerHTML = currentUser.saved.map(s => `
+        <div class="transaction-item">
+            <div class="transaction-title">${s.title}</div>
+            <div class="transaction-date">${s.date}</div>
+        </div>
+    `).join('') || '<div class="transaction-item" style="color: var(--text-muted);">Sin guardados aún</div>';
+}
+
+function saveCampaigns() {
+    localStorage.setItem('nekeCampaigns', JSON.stringify(campaigns));
+    localStorage.setItem('nekeUser', JSON.stringify(currentUser));
+}
+
+function openAdminPanel() {
+    document.getElementById('adminModal').style.display = 'flex';
+    renderAdminList();
+}
+
+function closeAdminPanel() {
+    document.getElementById('adminModal').style.display = 'none';
+}
+
+function renderAdminList() {
+    document.getElementById('projectsList').innerHTML = campaigns.map(p => `
+        <div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <div style="font-weight: 600; font-size: 13px;">${p.title}</div>
+                <div style="font-size: 11px; color: var(--text-muted);">${p.creator}</div>
+            </div>
+            <button onclick="deleteProject(${p.id})" style="background: #EF4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">Eliminar</button>
+        </div>
+    `).join('');
+}
+
+function saveProject(event) {
+    if (event.preventDefault) event.preventDefault();
+
+    const youtubeUrl = document.getElementById('projectUrl').value;
+    const youtubeId = extractYouTubeId(youtubeUrl);
+
+    const project = {
+        id: Date.now(),
+        title: document.getElementById('projectTitle').value,
+        creator: document.getElementById('projectCreator').value,
+        category: document.getElementById('projectCategory').value,
+        goal: parseInt(document.getElementById('projectGoal').value),
+        raised: parseInt(document.getElementById('projectRaised').value),
+        deadline: document.getElementById('projectDays').value + ' días',
+        youtubeId: youtubeId,
+        returnType: document.getElementById('projectReturnType').value,
+        returnLabel: document.getElementById('projectReturnType').value.toUpperCase(),
+        description: document.getElementById('projectDescription').value,
+        progress: Math.round((parseInt(document.getElementById('projectRaised').value) / parseInt(document.getElementById('projectGoal').value)) * 100),
+        tags: [],
+        likes: 0,
+        liked: false,
+        team: [{ name: document.getElementById('projectCreator').value, role: 'CEO' }]
+    };
+
+    campaigns.push(project);
+    saveCampaigns();
+    loadData();
+    document.getElementById('projectForm').reset();
+    showToast('✅ Proyecto agregado');
+}
+
+function deleteProject(id) {
+    campaigns = campaigns.filter(p => p.id !== id);
+    saveCampaigns();
+    loadData();
+    renderAdminList();
+}
+
+function goHome() {
+    filteredCampaigns = [...campaigns];
+    renderCampaigns();
+}
+
+function copyLink() {
+    const link = document.querySelector('.share-link-input').textContent;
+    navigator.clipboard.writeText(link);
+    showToast('🔗 Link copiado');
+}
+
+function showToast(msg) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
+// Init
+loadData();
+updateProfile();
+</script>
+
+</body>
+</html>
